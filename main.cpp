@@ -62,10 +62,11 @@ void displayMenu() {
     cout << "1. Set Grading Scheme\n";
     cout << "2. Add Graded Item\n";
     cout << "3. View All Items\n";
-    cout << "4. Remove Item\n";
-    cout << "5. Calculate Grade (Points-Based)\n";
-    cout << "6. Calculate Grade (Weighted)\n";
-    cout << "7. Undo Last Action\n";
+    cout << "4. Edit Item\n"; // New option for editing items
+    cout << "5. Remove Item\n";
+    cout << "6. Calculate Grade (Points-Based)\n";
+    cout << "7. Calculate Grade (Weighted)\n";
+    cout << "8. Undo Last Action\n";
     cout << "0. Exit\n";
     displaySeparator();
 }
@@ -126,7 +127,6 @@ void addGradedItem(vector<shared_ptr<GradedItem>>& items, stack<Action>& actions
     cout << "1. Homework\n";
     cout << "2. Quiz\n";
     cout << "3. Exam\n";
-    cout << "Choice: ";
 
     int category;
     getInput(category, "Choice: ");
@@ -157,6 +157,52 @@ void addGradedItem(vector<shared_ptr<GradedItem>>& items, stack<Action>& actions
     items.push_back(item);
     actions.push({Action::ADD, item, items.size() - 1});
     cout << "Item added!\n";
+}
+
+void editGradedItem(vector<shared_ptr<GradedItem>>& items) {
+    displayHeader("EDIT GRADED ITEM");
+    if (items.empty()) {
+        cout << "No items to edit.\n";
+        return;
+    }
+    
+    for (size_t i = 0; i < items.size(); ++i) {
+        cout << (i + 1) << ". " << items[i]->getCategory()
+             << " - " << items[i]->getName() << '\n';
+    }
+    int index;
+    getInput(index, "Enter item number to edit (0 to cancel): ");
+
+    if (index < 1 || index > static_cast<int>(items.size())) {
+        cout << "Cancelled.\n";
+        return;
+    }
+
+    auto& item = items[index - 1];
+    string name;
+    float possible, earned;
+
+    cout << "Enter new name (" << item->getName() << "): ";
+    getline(cin, name);
+    getInput(possible, "Enter new points possible: ");
+    getInput(earned, "Enter new points earned: ");
+
+    // Assume item is dynamic_cast-able, or make names non-const in GradedItem
+    int category = (item->getCategory() == "Homework") ? 1 : 
+                   (item->getCategory() == "Quiz") ? 2 : 3;
+
+    switch (category) {
+        case 1:
+            item = make_shared<Homework>(name, earned, possible);
+            break;
+        case 2:
+            item = make_shared<Quiz>(name, earned, possible);
+            break;
+        case 3:
+            item = make_shared<Exam>(name, earned, possible);
+            break;
+    }
+    cout << "Item edited!\n";
 }
 
 void viewItems(const vector<shared_ptr<GradedItem>>& items) {
@@ -305,10 +351,11 @@ int main() {
             case 1: setGradingScheme(scheme); break;
             case 2: addGradedItem(items, actions); break;
             case 3: viewItems(items); break;
-            case 4: removeItem(items, actions); break;
-            case 5: calculatePointsBased(items, scheme); break;
-            case 6: calculateWeighted(items, scheme); break;
-            case 7: undoLastAction(items, actions); break;
+            case 4: editGradedItem(items); break; // New case for editing items
+            case 5: removeItem(items, actions); break;
+            case 6: calculatePointsBased(items, scheme); break;
+            case 7: calculateWeighted(items, scheme); break;
+            case 8: undoLastAction(items, actions); break;
             case 0:
                 displayHeader("GOODBYE");
                 cout << "Thank you for using Grade Calculator!\n";
